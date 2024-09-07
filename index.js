@@ -7,10 +7,10 @@ const bot = new TelegramBot(process.env.TELEGRAM_TOKEN, { polling: true });
 
 bot.onText(/\/puerta/, async (msg) => {
     const chatId = msg.chat.id;
-    //get devices list
-    const devices = await getDevices();
-    inline_keyboard = devices.map(device => {
-        return [{ text: device.name, callback_data: `open ${device.id}` }];
+    //get doors list
+    const doors = await getDoors();
+    inline_keyboard = doors.map(door => {
+        return [{ text: door.name, callback_data: `open ${door.id}` }];
     });
     bot.sendMessage(chatId, 'Abrir puerta', {
         reply_markup: {
@@ -25,8 +25,8 @@ bot.on('callback_query', async (callbackQuery) => {
         const originalMessage = callbackQuery.message;
         const message = await bot.sendMessage(chatId, 'Solicitando apertura de puerta...');
         try {
-            device_id = callbackQuery.data.split(' ')[1];
-            const result = await openDoor(device_id);
+            door_id = callbackQuery.data.split(' ')[1];
+            const result = await openDoor(door_id);
             console.log(result);
             if (result == 'Success') {
                 //delete original message
@@ -43,11 +43,11 @@ bot.on('callback_query', async (callbackQuery) => {
     }
 });
 // Function to open the door, query to the API on /api/sendAccessRequest
-async function openDoor(device_id) {
+async function openDoor(door_id) {
     console.log('Opening door');
     try {
-        const response = await axios.post('https://access-core.lerolero.com.ec/api/sendAccessRequest', {
-            device_id: device_id
+        const response = await axios.post('https://access-core.lerolero.com.ec/api/createAccessRequest', {
+            door_id: door_id
         }
         );
         return "Success";
@@ -57,10 +57,9 @@ async function openDoor(device_id) {
     }
 }
 
-//Function to get devices list, query to the API on /api/devices
-async function getDevices() {
+async function getDoors() {
     try {
-        const response = await axios.get('https://access-core.lerolero.com.ec/api/devices');
+        const response = await axios.get('https://access-core.lerolero.com.ec/api/doors');
         return response.data;
     } catch (error) {
         console.error(error);
